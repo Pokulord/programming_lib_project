@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <cmath> // Для функции pow
+#include <gtest.h>
+
 
 using namespace std;
 
