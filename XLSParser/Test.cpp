@@ -1,4 +1,4 @@
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+ #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 #include <vector>
 #include <cstring>
@@ -11,12 +11,13 @@ using namespace std;
 #define PRINT_CHECK(expression)                                            \
     do {                                                                   \
         if ((expression)) {                                                \
-            cout << "CHECK passed: " << #expression << endl;               \
+            cout << "[PASSED] " << #expression << endl;                    \
         } else {                                                           \
-            cout << "CHECK failed: " << #expression << endl;               \
-            CHECK(expression); /* Triggers failure in the test framework */\
+            cout << "[FAILED] " << #expression << endl;                    \
         }                                                                  \
+        CHECK(expression); /* Always continue to the next check */         \
     } while (0)
+
 #ifdef _WIN32
 typedef unsigned short WORD;
 typedef unsigned long DWORD;
@@ -181,7 +182,7 @@ void getDIFATChain(DWORD* dst, CFHeader* cfh, char* buf, DWORD secSize) {
 	}
 }
 
-void getFATChain(DWORD* dst, DWORD* difCh, CFHeader* cfh, char* buf, DWORD secSize) {
+bool getFATChain(DWORD* dst, DWORD* difCh, CFHeader* cfh, char* buf, DWORD secSize) {
 	for (int i = 0; i < 109; i++) {
 		if (cfh->DIFAT[i] == 0xffffffff) {
 			break;
@@ -201,9 +202,10 @@ void getFATChain(DWORD* dst, DWORD* difCh, CFHeader* cfh, char* buf, DWORD secSi
 			delete[] difat;
 		}
 	}
+	return true;
 }
 
-void getWorkbookChain(DWORD* dst, DWORD* fatCh, DirectoryEntry* de, DWORD chainSize, DWORD secSize, char* buf) {
+bool getWorkbookChain(DWORD* dst, DWORD* fatCh, DirectoryEntry* de, DWORD chainSize, DWORD secSize, char* buf) {
 	dst[0] = de->startingSecLoc;
 	for (int i = 1; i < chainSize; i++) {
 		DWORD curFATSecIndex = dst[i - 1] / (secSize / 4);
@@ -211,6 +213,7 @@ void getWorkbookChain(DWORD* dst, DWORD* fatCh, DirectoryEntry* de, DWORD chainS
 		ReadSector(fat, buf, fatCh[curFATSecIndex], secSize);
 		dst[i] = fat[dst[i - 1] % (secSize / 4)];
 		delete[] fat;
+		return true;
 	}
 }
 
@@ -604,7 +607,51 @@ void printCell(SST* sst, LabelSst* lsst) {
 	wcout << endl;
 }
 
-bool checkSIGOfFIle(const char *  filename) {
+
+bool ForWorkBookRead(CFHeader* cfh, char* buf, DWORD sectorSize, DWORD* FATChain)
+{
+	DWORD k = countDESectors(cfh->firstDirSecLoc, buf, FATChain, sectorSize);
+	DWORD* deChain = getDEChain(cfh->firstDirSecLoc, buf, FATChain, sectorSize, k);
+	DirectoryEntry de;
+	DWORD deOffset = getWorkbookDEOffset(deChain, k, buf, sectorSize);
+	memcpy(&de, &buf[deOffset], 128);
+	DWORD wbSSize = ceil(double(de.streamSize) / sectorSize);
+	DWORD* WorkbookSC = new DWORD[wbSSize];
+	if (!getWorkbookChain(WorkbookSC, FATChain, &de, wbSSize, sectorSize, buf))
+	{
+		char* Workbook = unpackWBSC(WorkbookSC, wbSSize, sectorSize, buf);
+		delete[] buf;
+		return false;
+	}
+}
+
+
+bool CheckFatChain(CFHeader* cfh, char* buf, DWORD sectorSize , DWORD * DIFATChain,bool isWorkBookReadNeed)
+{
+	getDIFATChain(DIFATChain, cfh, buf, sectorSize);
+	DWORD* FATChain = new DWORD[cfh->numOfFATSectors];
+
+	if (isWorkBookReadNeed)
+	{
+		if (getFATChain(FATChain, DIFATChain, cfh, buf, sectorSize))
+		{
+			if (ForWorkBookRead(cfh, buf, sectorSize, FATChain))
+			{
+				return true;
+			}
+		}
+	}
+	if (getFATChain(FATChain, DIFATChain, cfh, buf, sectorSize))
+	{
+		return true;
+	}
+	return false;
+}
+
+
+
+
+bool checkSIGOfFIle(const char *  filename, bool isFATCheckNeeded, bool isWorkbookReadNeed) {
 #ifdef _WIN32
 	system("chcp 65001 > NUL");
 #endif
@@ -618,12 +665,29 @@ bool checkSIGOfFIle(const char *  filename) {
 	{
 		return false;
 	}
-	/*DWORD sectorSize = pow(2, cfh->sectorShift);
-	DWORD nds = cfh->numOfDIFATSectors ? cfh->numOfDIFATSectors : 1;
-	DWORD* DIFATChain = new DWORD[nds];
-	getDIFATChain(DIFATChain, cfh, buf, sectorSize);
-	DWORD* FATChain = new DWORD[cfh->numOfFATSectors];
-	getFATChain(FATChain, DIFATChain, cfh, buf, sectorSize);
+
+
+	if (isFATCheckNeeded)
+	{
+		DWORD sectorSize = pow(2, cfh->sectorShift);
+		DWORD nds = cfh->numOfDIFATSectors ? cfh->numOfDIFATSectors : 1;
+		DWORD* DIFATChain = new DWORD[nds];
+		if (!CheckFatChain(cfh, buf, sectorSize, DIFATChain,false))
+		{
+			return false;
+		}
+	}
+
+	if (isWorkbookReadNeed)
+	{
+		
+
+
+	}
+
+
+
+	/*
 	DWORD k = countDESectors(cfh->firstDirSecLoc, buf, FATChain, sectorSize);
 	DWORD* deChain = getDEChain(cfh->firstDirSecLoc, buf, FATChain, sectorSize, k);
 	DirectoryEntry de;
@@ -659,13 +723,31 @@ bool checkSIGOfFIle(const char *  filename) {
 // Тесты
 
 TEST_CASE("Testing opening") {
-	PRINT_CHECK(checkSIGOfFIle("2003.xls") == true);
-	PRINT_CHECK(checkSIGOfFIle("2010.xls") == true);
-	PRINT_CHECK(checkSIGOfFIle("2007.xls") == true);
+	cout << "Testing opening" << endl;
+	PRINT_CHECK(checkSIGOfFIle("2003.xls",false,false) == true);
+	PRINT_CHECK(checkSIGOfFIle("2010.xls",false,false) == true);
+	PRINT_CHECK(checkSIGOfFIle("2007.xls",false,false) == true);
+	PRINT_CHECK(checkSIGOfFIle("x64\\Debug\\Files_to_test\\0036359.xls", false,false) == true);
+	cout << "--------------------" << endl;
 }
 
-TEST_CASE("Testing other ext opening")
+
+TEST_CASE("Testing FAT reading")
 {
-	PRINT_CHECK(checkSIGOfFIle("test.txt") == true);
+	cout << "Testing sectors reading" << endl;
+	PRINT_CHECK(checkSIGOfFIle("2003.xls", true,false) == true);
+	PRINT_CHECK(checkSIGOfFIle("2007.xls", true,false) == true);
+	PRINT_CHECK(checkSIGOfFIle("x64\\Debug\\Files_to_test\\0036359.xls", true,false) == true);
+	cout << "--------------------" << endl;
 }
+
+TEST_CASE("Testing Workbook reading")
+{
+	cout << "Testing Workbook reading" << endl;
+	PRINT_CHECK(checkSIGOfFIle("2003.xls", true, true) == true);
+	PRINT_CHECK(checkSIGOfFIle("2007.xls", true, true) == true);
+	PRINT_CHECK(checkSIGOfFIle("x64\\Debug\\Files_to_test\\0036359.xls", true,true) == true);
+	cout << "--------------------" << endl;
+}
+
 
