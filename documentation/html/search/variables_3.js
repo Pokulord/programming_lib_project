@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['faltexpreval_0',['fAltExprEval',['../struct_ws_bool.html#acbad3e257cb38ebdd65cb005cd6da20e',1,'WsBool']]],
+  ['faltformulaentry_1',['fAltFormulaEntry',['../struct_ws_bool.html#a7ea7001b2b31a74de0fca4bca1150b36',1,'WsBool']]],
+  ['fapplystyles_2',['fApplyStyles',['../struct_ws_bool.html#a33587f513c5770ce5e0d5113a193e084',1,'WsBool']]],
+  ['fcolsumsright_3',['fColSumsRight',['../struct_ws_bool.html#a0bfc8b97d6057d4c42e1bbb1402c5842',1,'WsBool']]],
+  ['fdialog_4',['fDialog',['../struct_ws_bool.html#a27ee23133fe7f9039a12cd98239be0d2',1,'WsBool']]],
+  ['fextst_5',['fExtSt',['../struct_x_l_u_r_e_s.html#a997b551a80add5a48b2b67921a4a7644',1,'XLURES']]],
+  ['ffittopage_6',['fFitToPage',['../struct_ws_bool.html#a80036903389211f3b04591880cb82fb2',1,'WsBool']]],
+  ['fhighbyte_7',['fHighByte',['../struct_s_x_l_u_s.html#a2d32f89cea4e0fccbc656b5bd346f06c',1,'SXLUS::fHighByte'],['../struct_x_l_u_r_e_s.html#a2aef779a1eb92333dfc17816ff9ec4d7',1,'XLURES::fHighByte']]],
+  ['firstdifatsecloc_8',['firstDIFATSecLoc',['../struct_c_f_header.html#aba010975e4e098a50381dfb0cf026d49',1,'CFHeader']]],
+  ['firstdirsecloc_9',['firstDirSecLoc',['../struct_c_f_header.html#a3ee91f1f1124eeb4d70f7d79e5a6bdd7',1,'CFHeader']]],
+  ['firstminifatsecloc_10',['firstMiniFATSecLoc',['../struct_c_f_header.html#a746ec661da9d9d93b298a59e73fce479',1,'CFHeader']]],
+  ['frichst_11',['fRichSt',['../struct_x_l_u_r_e_s.html#a71f3b30ccd3b3f42cc28c066cbdc814e',1,'XLURES']]],
+  ['frowsumsbelow_12',['fRowSumsBelow',['../struct_ws_bool.html#a65b65a38c182bc3d3c6337a339c46203',1,'WsBool']]],
+  ['fshowautobreaks_13',['fShowAutoBreaks',['../struct_ws_bool.html#ab4c99d6e87a0c929017e593d1fbe03b1',1,'WsBool']]],
+  ['fsynchoriz_14',['fSyncHoriz',['../struct_ws_bool.html#a6ced35f371bdd90b7b221e9ff413a493',1,'WsBool']]],
+  ['fsyncvert_15',['fSyncVert',['../struct_ws_bool.html#a82e7f6e07db249f13c9bb2c84430ec2e',1,'WsBool']]]
+];
