@@ -15,6 +15,7 @@
 
 1. [Общая блок-схема](https://pokulord.github.io/programming_lib_project/BlockShemas/diagram.png)
 2. [Документация Doxygen](https://pokulord.github.io/programming_lib_project/documentation/html/index.html)
+3. [Документация по проекту](https://pokulord.github.io/programming_lib_project/documentation/doc.pdf)
 
 
 
